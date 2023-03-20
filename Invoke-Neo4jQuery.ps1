@@ -100,7 +100,8 @@ function Invoke-neo4jQuery {
         [Parameter(Mandatory=$true,Position=4)][string]$ResultDir2
     )
 
-    $FilePath = $ResultDir2+".\"+$Queryname+".csv"
+    $FilePath = $ResultDir2+".\"+$Queryname+".txt"
+    $CSVPath = $ResultDir2+".\"+$Queryname+".csv"
     Write-Host "Start query `"$Queryname`" at "("{0:dd.MM.yyyy} {0:HH:mm:ss}" -f (Get-Date))
     $Result = Invoke-WebRequest -Uri $Uri2 -Method POST -Body $Query2 -credential $neo4jCreds2 -ContentType "application/json"
     if ($Result) {
@@ -108,6 +109,8 @@ function Invoke-neo4jQuery {
         $PsResult = ConvertFrom-Json -InputObject $Result.Content
         $PsResult.results.columns -join ',' | Out-File -FilePath $FilePath
         $PsResult.results.data | ForEach-Object {$_.row -join ','} | Out-File -FilePath $FilePath -Append 
+        Import-CSV $FilePath -Delimiter "," | Export-CSV $CSVPath -NoTypeInformation
+        Remove-Item $FilePath
     }
 }
 
