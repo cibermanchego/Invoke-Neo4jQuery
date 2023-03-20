@@ -1,14 +1,18 @@
 # Invoke-Neo4jQuery
-As part of our Active Directory Assessments we frequently use Bloodhound as well as the Neo4j console to run custom cypher queries. 
-We wrote this little script to easily run a set of standardized queries and export the results as CSV to hand them over to our clients as part of the assessment results.
+**This script is not mine (source: https://github.com/teal-technology-consulting/Invoke-Neo4jQuery)**
+I only modified it to improve the CSV output plus compiled and adapted a lot of queries to be used out of the box, they are included in the file neo4j_queries.json.
 
-It works like this:
-The script reads one or more CYPHER queries with their titles out of an inpute file. It looks for the file "neo4j_queries.json" in the same directory.
-It then queries the database "neo4j" of a local instance of neo4j by using the credentials "neo4j" and "Bloodhound".
-It creates one CSV file per query with the title as file name in the current directory.
-Database URL, input file name, username, password and output directory can be passed to the script as parameters.
-Be aware that when you have long running queries and you exit the script, the running query will still be executed by neo4j in the background.
+It uses the Neo4j console directly instead of the Bloodhound interface and downloads the output in CSV format for later use.
+It creates a new CSV file per query with the file name taken from the title in the JSON file.
+Looking at the neo4j_queries.json file it's easy to see how to add new queries or remove the ones not needed.
 
-If you want to know more about our Active Directory Assessment visit https://www.teal-consulting.de/en/2019/11/13/assume-breach/
+The idea is to speed up the process of extracting interesting information from the Bloodhound database and have an easier format to work with.
+Feel free to expand upon the quries already present in the neo4j_queries.json file.
 
-Shout-out to "Sinister China Penguin" who published a script we used as foundation. 
+
+
+How to run: 
+```
+Invoke-neo4jQuery "http://localhost:7474/db/bloodhound/tx/commit" neo4j_queries.json neo4j <NEO4J_PASSWORD> "c:\users\consultant\bloodhound\output"
+```
+More help inside the script.
