@@ -5,8 +5,77 @@
             "query": "Match (n:Group) WHERE n.name CONTAINS 'ADMIN'  RETURN n.name AS Admingroups"
         },
         {
-            "name": "02 Kerberoastable users",
+            "name": "02 Kerberoastable accounts",
             "query": "MATCH (n:User) WHERE n.hasspn=true RETURN n.name AS KerberoastableUsers"
+        },
+        {
+            "name": "03 Owned and enabled Kerberoastable accounts",
+            "query": "MATCH (n:User {owned: true}) WHERE n.hasspn=true AND  n.enabled=TRUE RETURN n.name,n.serviceprincipalnames"
+        },
+        {
+            "name": "04 Where are Kerberoastable users admin to",
+            "query": "OPTIONAL MATCH (u1:User) WHERE u1.hasspn=true OPTIONAL MATCH (u1)-[r:AdminTo]->(c:Computer) RETURN u1.name AS user_with_spn,c.name AS local_admin_to"
+        },
+        {
+            "name": "05 Password on description field",
+            "query": "MATCH (u:User) WHERE toUpper(u.description) CONTAINS 'PASS' RETURN u.name,u.description"
+        },
+        {
+            "name": "06 All Domain Admins with name and description, password last set and last logon",
+            "query": "MATCH (u:User)-[:MemberOf]->(g:Group) where g.name CONTAINS 'DOMAIN ADMINS' return u.name, u.displayname,u.description,datetime({epochSeconds: toInteger(u.pwdlastset) })AS PwdLastSet, datetime({epochSeconds: toInteger(u.lastlogon) }) AS LastLogon order by PwdLastSet"
+        },
+        {
+            "name": "07 How many computers use LAPS and don't",
+            "query": "MATCH (c:Computer) RETURN c.haslaps, COUNT(*)"
+        },
+        {
+            "name": "08 List of Groups owned users are member of",
+            "query": "MATCH (n:User {owned: true})-[r:MemberOf]->(g:Group) RETURN n.name AS UserName,g.name AS GroupName ORDER BY UserName"
+        },
+        {
+            "name": "09 List Users that belong to admin groups with description not null",
+            "query": "MATCH (u:User)-[r:MemberOf]->(g:Group) WHERE toUpper(g.distinguishedname) CONTAINS 'ADMIN' AND u.description IS NOT NULL RETURN u.name,u.description"
+        },
+        {
+            "name": "10 List Groups with local admin rights",
+            "query": "MATCH p=(m:Group)-[r:AdminTo]->(n:Computer) RETURN m.name AS GroupName, n.name AS ComputerName ORDER BY GroupName"
+        },
+        {
+            "name": "11 List Users with local admin rights",
+            "query": "MATCH p=(m:User)-[r:AdminTo]->(n:Computer) RETURN m.name AS UserName, n.name AS ComputerName ORDER BY UserName"
+        },
+        {
+            "name": "12  List Users with Admincount equal to 1",
+            "query": "MATCH (u:User {admincount: True}) WHERE NOT u.name starts with 'KRBTGT' RETURN u.name, u.displayname, u.description, u.objectid"
+        },
+        {
+            "name": "13 Users with password not required",
+            "query": "MATCH (u:User {enabled: True, passwordnotreqd: True}) RETURN u.name, u.displayname, u.description, u.objectid"
+        },
+        {
+            "name": "14 Enabled Users not requiring Pre-Authentication",
+            "query": "MATCH (u:User {enabled: True, dontreqpreauth: true}) RETURN u.name, u.displayname, u.description, u.objectid"
+        },
+        {
+            "name": "15 List all GPOs and creation time",
+            "query": "Match (n:GPO) return n.name AS GPODate,datetime({epochSeconds: toInteger(n.whencreated) }) AS CreationDate, n.gpcpath AS PATH ORDER BY CreationDate"
+        },
+        {
+            "name": "16 Users that never logged on and are still active",
+            "query": "MATCH (n:User) WHERE n.lastlogontimestamp=-1.0 AND n.enabled=TRUE RETURN n.name,n.description ORDER BY n.name"
+        },
+        {
+            "name": "17 OWNED Users that never logged on and are still active",
+            "query": "MATCH (n:User {owned: true}) WHERE n.lastlogontimestamp=-1.0 AND n.enabled=TRUE RETURN n.name ORDER BY n.name"
+        },
+        {
+            "name": "18 List Most privileged Groups in Domain",
+            "query": "MATCH (g:Group) OPTIONAL MATCH (g)-[:AdminTo]->(c1:Computer) OPTIONAL MATCH (g)-[:MemberOf*1..]->(:Group)-[:AdminTo]->(c2:Computer) WITH g, COLLECT(c1) + COLLECT(c2) AS tempVar UNWIND tempVar AS computers RETURN g.name AS GroupName,COUNT(DISTINCT(computers)) AS AdminRightCount ORDER BY AdminRightCount DESC"
+        },
+        {
+            "name": "19 Summary report of machines grouped by their operating systems versions, along with number of machines running specific OS version",
+            "query": "MATCH (c:Computer) WHERE c.operatingsystem is not null MATCH (n:Computer {operatingsystem: c.operatingsystem})  RETURN c.operatingsystem as OS, count(distinct n) AS Number ORDER BY Number DESC"
         }
+
 	]
 }
